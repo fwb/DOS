@@ -1,57 +1,57 @@
 function init( )
-		term.setBackgroundColor( colors.black )
-        term.setTextColor( colors.orange )
-        term.clear( )
-        term.setCursorPos( 3, 5 )
-        term.write( "Loading..." )
+	term.setBackgroundColor( colors.black )
+	term.setTextColor( colors.orange )
+	term.clear( )
+	term.setCursorPos( 3, 5 )
+	term.write( "Loading..." )
 end
 
 function debugInit( )
-		dm = peripheral.wrap( "top" )
-		dm.setBackgroundColor( colors.black )
-		dm.setTextColor( colors.red )
-		dm.setTextScale( 0.5 )
-		dm.clear( )
-		debug( "Loading..." )
+	dm = peripheral.wrap( "top" )
+	dm.setBackgroundColor( colors.black )
+	dm.setTextColor( colors.red )
+	dm.setTextScale( 0.5 )
+	dm.clear( )
+	debug( "Loading..." )
 end
 
 function debug( str )
-		local x, y = dm.getSize( )
-		dm.setCursorPos( 1, y )
-		dm.write( str )
-		dm.scroll( 1 )
+	local x, y = dm.getSize( )
+	dm.setCursorPos( 1, y )
+	dm.write( str )
+	dm.scroll( 1 )
 end
 
 function clock( )
-		local w,h = term.getSize( )
-		term.setCursorPos( w-24, 1 )
-		local time = textutils.formatTime( os.time( ), true )
-		term.write( "Minecraft Time: " )
-		term.write( time )
+	local w,h = term.getSize( )
+	local time = textutils.formatTime( os.time( ), true )
+	term.setCursorPos( w-24, 1 )
+	term.write( "Minecraft Time: " )
+	term.write( time )
 end
 
 function setTextDefaults( )
-		term.setBackgroundColor( colors.black )
-		term.setTextColor( colors.orange )
+	term.setBackgroundColor( colors.black )
+	term.setTextColor( colors.orange )
 end
 
 function drawButton( x, y, str )
-		local len = string.len( str )
-		local border = "+" .. string.rep( "-", len ) .. "+"
-		term.setBackgroundColor( colors.cyan )
-		term.setTextColor( colors.white )
+	local len = string.len( str )
+	local border = "+" .. string.rep( "-", len ) .. "+"
+	term.setBackgroundColor( colors.cyan )
+	term.setTextColor( colors.white )
 
-		term.setCursorPos( 1, 1 )
-		term.write( "Len: " .. len )
+	term.setCursorPos( 1, 1 )
+	term.write( "Len: " .. len )
 
-		term.setCursorPos( x-1, y-1 )
-		term.write( border )
+	term.setCursorPos( x-1, y-1 )
+	term.write( border )
 
-		term.setCursorPos( x-1, y )
-		term.write( "|" .. str .. "|" )
+	term.setCursorPos( x-1, y )
+	term.write( "|" .. str .. "|" )
 
-		term.setCursorPos( x-1, y+1 )
-		term.write( border )
+	term.setCursorPos( x-1, y+1 )
+	term.write( border )
 
-		utils.setTextDefaults( )
+	utils.setTextDefaults( )
 end

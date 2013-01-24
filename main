@@ -10,20 +10,20 @@ function restart( )
 end
 
 function drawDesktop( )
-		term.clear( )
-		-- draw widgets
-		utils.clock( )
-		-- utils.drawButton( 12, 16, "Reboot" )
-		for i,n in ipairs( b ) do
-			n:draw( )
-		end
-		-- other stuff
-		term.setCursorPos( 1, 1 )
+	term.clear( )
+	-- draw widgets
+	utils.clock( )
+	-- draw buttons
+	for i,n in ipairs( b ) do
+		n:draw( )
+	end
+	-- other stuff
+	term.setCursorPos( 1, 1 )
 end
 
 if not term.isColor( ) then
-        print( "An advanced computer is required." )
-        return
+	print( "An advanced computer is required." )
+	return
 end
 
 mon = peripheral.wrap( "left" )
@@ -34,8 +34,8 @@ local missing = 0
 if not os.loadAPI( "api/utils" ) then missing = 1 end
 
 if missing == 1 then
-		print( "A required API is missing." )
-		return
+	print( "A required API is missing." )
+	return
 end
 
 utils.debugInit( )
@@ -61,7 +61,6 @@ while true do
 		end
 	elseif event == "terminate" then
 		utils.debug( "Terminating." )
-		term.restore( )
 		break
 	elseif event ~= "timer" then
 		utils.debug( "Event: " .. event )
