@@ -7,21 +7,26 @@ button = {
 
 local button_mt = class( button )
 
-function button:new( posX, posY, str, func )
-	return setmetatable( {x=posX,y=posY,title=str,callback=func}, button_mt)
+function button:new( x, y, text, callback )
+	return setmetatable( {x=x,y=y,text=text,callback=callback}, button_mt)
+end
+
+function button:getBounds( )
+	return self.x, self.y, self.x+string.len( self.text )+1, self.y+2
 end
 
 function button:draw( )
-	local len = string.len( self.title )
+	local len = string.len( self.text )
 	local border = self.corner .. string.rep( self.line, len ) .. self.corner
+	local x1, y1 = self:getBounds( )
 	term.setBackgroundColor( colors.cyan )
 	term.setTextColor( colors.white )
 
-	term.setCursorPos( self.x-1, self.y-1 )
+	term.setCursorPos( x1, y1 )
 	term.write( border )
-	term.setCursorPos( self.x-1, self.y )
-	term.write( "|" .. self.title .. "|" )
-	term.setCursorPos( self.x-1, self.y+1 )
+	term.setCursorPos( x1, y1+1 )
+	term.write( "|" .. self.text .. "|" )
+	term.setCursorPos( x1, y1+2 )
 	term.write( border )
 
 	utils.setTextDefaults( )

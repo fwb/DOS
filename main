@@ -29,6 +29,7 @@ local missing = 0
 if not os.loadAPI( "api/utils" ) then missing = 1 end
 --if not dofile( "api/button" ) then missing = 1 end
 dofile( "api/button" )
+dofile( "class" )
 
 if missing == 1 then
 		print( "A required API is missing." )
@@ -43,19 +44,22 @@ b = button:new( 20, 20, "Reboot", restart )
 drawDesktop( )
 -- draw the home screen
 while true do
-		drawDesktop( )
-		os.startTimer( 1 )
-		local event, button, clickX, clickY = os.pullEvent( )
+	drawDesktop( )
+	os.startTimer( 1 )
+	local event, button, clickX, clickY = os.pullEventRaw( )
 
-		term.setCursorPos( 1, 2 )
-		if event == "monitor_touch" then
-				utils.debug( "touchscreen event: (" .. clickX .. "," .. clickY .. ")" )
-				if clickX >= 19 and clickX <= 26 and clickY >= 19 and clickY <= 21 then
-						b:click( )
-				end
-		elseif event ~= "timer" then
-				utils.debug( "event: " .. event )
+	term.setCursorPos( 1, 2 )
+	if event == "monitor_touch" then
+		utils.debug( "touchscreen event: (" .. clickX .. "," .. clickY .. ")" )
+		if clickX >= 19 and clickX <= 26 and clickY >= 19 and clickY <= 21 then
+				b:click( )
 		end
+	elseif event == "terminate" then
+		term.restore( )
+		break
+	elseif event ~= "timer" then
+		utils.debug( "event: " .. event )
+	end
 end
 
 term.restore( )
