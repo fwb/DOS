@@ -17,7 +17,6 @@ end
 
 function debug( str )
 		local x, y = dm.getSize( )
-		local dm = peripheral.wrap( "top" )
 		dm.setCursorPos( 1, y )
 		dm.write( str )
 		dm.scroll( 1 )

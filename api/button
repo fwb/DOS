@@ -1,5 +1,3 @@
-dofile( 'class' )
-
 button = {
 	corner	= "+",
 	line	= "-"

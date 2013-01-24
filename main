@@ -1,4 +1,7 @@
-local b
+dofile( "class" )
+dofile( "api/button" )
+
+local b = { }
 
 function restart( )
 	utils.debug( "Reboot button clicked" )
@@ -11,7 +14,9 @@ function drawDesktop( )
 		-- draw widgets
 		utils.clock( )
 		-- utils.drawButton( 12, 16, "Reboot" )
-		b:draw( )
+		for i,n in ipairs( b ) do
+			n:draw( )
+		end
 		-- other stuff
 		term.setCursorPos( 1, 1 )
 end
@@ -27,9 +32,6 @@ term.redirect( mon )
 
 local missing = 0
 if not os.loadAPI( "api/utils" ) then missing = 1 end
---if not dofile( "api/button" ) then missing = 1 end
-dofile( "api/button" )
-dofile( "class" )
 
 if missing == 1 then
 		print( "A required API is missing." )
@@ -39,7 +41,7 @@ end
 utils.debugInit( )
 utils.init( )
 
-b = button:new( 20, 20, "Reboot", restart )
+table.insert( b, button:new( 20, 20, "Reboot", restart ) )
 
 drawDesktop( )
 -- draw the home screen
@@ -50,15 +52,19 @@ while true do
 
 	term.setCursorPos( 1, 2 )
 	if event == "monitor_touch" then
-		utils.debug( "touchscreen event: (" .. clickX .. "," .. clickY .. ")" )
-		if clickX >= 19 and clickX <= 26 and clickY >= 19 and clickY <= 21 then
-				b:click( )
+		utils.debug( "Touchscreen Event: (" .. clickX .. "," .. clickY .. ")" )
+		for i,n in ipairs( b ) do
+			local x1, y1, x2, y2 = n:getBounds( )
+			if clickX >= x1 and clickX <= x2 and clickY >= y1 and clickY <= y2 then
+				n:click( )
+			end
 		end
 	elseif event == "terminate" then
+		utils.debug( "Terminating." )
 		term.restore( )
 		break
 	elseif event ~= "timer" then
-		utils.debug( "event: " .. event )
+		utils.debug( "Event: " .. event )
 	end
 end
 
