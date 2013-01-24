@@ -2,12 +2,10 @@ dofile( "class" )
 dofile( "api/button" )
 
 local b = { }
+local exit = false
 
-function restart( )
-	utils.debug( "Reboot button clicked" )
-	sleep( 2 )
-	os.reboot( )
-end
+local monMain = "left"
+local monDebug = "top"
 
 function drawDesktop( )
 	term.clear( )
@@ -41,27 +39,90 @@ end
 utils.debugInit( )
 utils.init( )
 
-table.insert( b, button:new( 20, 20, "Reboot", restart ) )
+table.insert( b, button:new( 20, 20, "Reboot", 
+	function ( )
+		utils.debug( "Reboot button clicked" )
+		sleep( 2 )
+		os.reboot( )
+	end
+) )
+table.insert( b, button:new( 20, 16, "Paint", 
+	function ( )
+		utils.debug( "Starting Paint program, click this monitor to exit" )
+		sleep( 2 )
+		local cr = coroutine.create( 
+			function( )
+				shell.run( "paint", "/testimage" )
+			end
+		)
 
-drawDesktop( )
+		local event = { }
+		local tFilter = { }
+
+		mon.setTextScale( 1 )
+		while true do
+			if event[1] == "monitor_touch" then
+				if event[2] == monMain then
+					--utils.debug( "monitor_touch -> mouse_click" )
+					os.queueEvent( "mouse_click", 1, unpack( event, 3 ) )
+				elseif event[2] == monDebug then
+					utils.debug( "Debug monitor clicked, exiting" )
+					break
+				end
+			end
+
+			local ok, param = coroutine.resume( cr, unpack( event ) )
+			if not ok then
+				utils.debug( "Paint error: " .. param )
+				break
+			else
+				tFilter = param
+			end
+
+			if coroutine.status( cr ) == "dead" then
+				utils.debug ( "Paint coroutine died" )
+				break
+			end
+
+			event = { os.pullEventRaw( ) }
+		end
+		mon.setTextScale( 0.5 )
+		--shell.run( "/rom/programs/monitor", "left", "/rom/programs/color/paint", "/image" )
+	end 
+) )
+table.insert( b, button:new( 20, 24, "Exit", 
+	function( ) 
+		utils.debug( "Exit button clicked, terminating" )
+		sleep( 2 )
+		exit = true
+	end
+) )
+
 -- draw the home screen
-while true do
+while not exit do
 	drawDesktop( )
 	os.startTimer( 1 )
-	local event, button, clickX, clickY = os.pullEventRaw( )
+	local event, side, clickX, clickY = os.pullEventRaw( )
 
 	term.setCursorPos( 1, 2 )
 	if event == "monitor_touch" then
-		utils.debug( "Touchscreen Event: (" .. clickX .. "," .. clickY .. ")" )
-		for i,n in ipairs( b ) do
-			local x1, y1, x2, y2 = n:getBounds( )
-			if clickX >= x1 and clickX <= x2 and clickY >= y1 and clickY <= y2 then
-				n:click( )
+		local touchCoords = "(" .. clickX .. "," .. clickY .. ")"
+		if side == monMain then
+			utils.debug( "Touchscreen Event: " .. touchCoords )
+			for i,n in ipairs( b ) do
+				local x1, y1, x2, y2 = n:getBounds( )
+				if clickX >= x1 and clickX <= x2 and clickY >= y1 and clickY <= y2 then
+					n:click( )
+				end
 			end
+		elseif side == monDebug then
+			utils.debug( "Touchscreen event on debug monitor: " .. touchCoords )
+		else
+			utils.debug( "Touchscreen event on unknown monitor: " .. touchCoords )
 		end
 	elseif event == "terminate" then
-		utils.debug( "Terminating." )
-		break
+		utils.debug( "Terminating" )
+		exit = true
 	elseif event ~= "timer" then
 		utils.debug( "Event: " .. event )
 	end
