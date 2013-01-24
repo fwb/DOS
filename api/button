@@ -1,0 +1,32 @@
+dofile( 'class' )
+
+button = {
+	corner	= "+",
+	line	= "-"
+}
+
+local button_mt = class( button )
+
+function button:new( posX, posY, str, func )
+	return setmetatable( {x=posX,y=posY,title=str,callback=func}, button_mt)
+end
+
+function button:draw( )
+	local len = string.len( self.title )
+	local border = self.corner .. string.rep( self.line, len ) .. self.corner
+	term.setBackgroundColor( colors.cyan )
+	term.setTextColor( colors.white )
+
+	term.setCursorPos( self.x-1, self.y-1 )
+	term.write( border )
+	term.setCursorPos( self.x-1, self.y )
+	term.write( "|" .. self.title .. "|" )
+	term.setCursorPos( self.x-1, self.y+1 )
+	term.write( border )
+
+	utils.setTextDefaults( )
+end
+
+function button:click( )
+	self.callback( )
+end

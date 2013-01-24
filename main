@@ -1,0 +1,62 @@
+local b
+
+function restart( )
+	utils.debug( "Reboot button clicked" )
+	sleep( 2 )
+	os.reboot( )
+end
+
+function drawDesktop( )
+		term.clear( )
+		-- draw widgets
+		utils.clock( )
+		-- utils.drawButton( 12, 16, "Reboot" )
+		b:draw( )
+		-- other stuff
+		term.setCursorPos( 1, 1 )
+end
+
+if not term.isColor( ) then
+        print( "An advanced computer is required." )
+        return
+end
+
+mon = peripheral.wrap( "left" )
+mon.setTextScale( 0.5 )
+term.redirect( mon )
+
+local missing = 0
+if not os.loadAPI( "api/utils" ) then missing = 1 end
+--if not dofile( "api/button" ) then missing = 1 end
+dofile( "api/button" )
+
+if missing == 1 then
+		print( "A required API is missing." )
+		return
+end
+
+utils.debugInit( )
+utils.init( )
+
+b = button:new( 20, 20, "Reboot", restart )
+
+drawDesktop( )
+-- draw the home screen
+while true do
+		drawDesktop( )
+		os.startTimer( 1 )
+		local event, button, clickX, clickY = os.pullEvent( )
+
+		term.setCursorPos( 1, 2 )
+		if event == "monitor_touch" then
+				utils.debug( "touchscreen event: (" .. clickX .. "," .. clickY .. ")" )
+				if clickX >= 19 and clickX <= 26 and clickY >= 19 and clickY <= 21 then
+						b:click( )
+				end
+		elseif event ~= "timer" then
+				utils.debug( "event: " .. event )
+		end
+end
+
+term.restore( )
+
