@@ -1,0 +1,129 @@
+airship = {
+	buttons = { },
+	xmitSide = "right",
+	-- wireless redstone frequencies for 6axis frame machine
+	up = 3501,
+	down = 3502,
+	north = 3503,
+	east = 3504,
+	south = 3505,
+	west = 3506
+}
+
+local airship_mt = class( airship )
+
+function airship:new( )
+	return setmetatable( { }, airship_mt )
+end
+
+function airship:run( )
+	local event = { }
+	local tFilter = { }
+	local exit = false
+	local sizeX, sizeY = term.getSize( )
+
+	utils.debug( "Starting Airship Control, click this monitor to exit" )
+	sleep( 2 )
+
+	table.insert( self.buttons, button:new( 5, 15, "Test", 
+		function( )
+			utils.debug( "Airship: Test button clicked" )
+		end
+	))
+	
+	table.insert( self.buttons, button:new( 5, 19, "Exit",
+		function( )
+			utils.debug( "Airship: exit button clicked" )
+			exit = true
+		end
+	))
+
+	table.insert( self.buttons, button:new( 22, 18, "Up", 
+		function( )
+			self:move( self.up ) 
+		end
+	))
+	table.insert( self.buttons, button:new( 20, 22, "Down", 
+		function( )
+			self:move( self.down ) 
+		end
+	))
+	table.insert( self.buttons, button:new( 36, 16, "North", 
+		function( )
+			self:move( self.north ) 
+		end
+	))
+	table.insert( self.buttons, button:new( 44, 20, "East", 
+		function( )
+			self:move( self.east ) 
+		end
+	))
+	table.insert( self.buttons, button:new( 36, 24, "South", 
+		function( )
+			self:move( self.south )
+		end
+	))
+	table.insert( self.buttons, button:new( 29, 20, "West", 
+		function( )
+			self:move( self.west )
+		end
+	))
+	table.insert( self.buttons, button:new( 36, 20, "Stop ", 
+		function( )
+
+		end
+	))
+	
+	for i,n in ipairs( self.buttons ) do
+		local x,y,xmax,ymax = n:getBounds( )
+		utils.debug( "Airship: button created: (" .. x .. "," .. y .. ")->(" .. xmax .. "," .. ymax ..")" )
+	end
+
+	term.clear( )
+
+	while not exit do
+		self:drawScreen( )
+		os.startTimer( 1 )
+		local event, side, clickX, clickY = os.pullEventRaw( )
+
+		if event == "monitor_touch" then
+			if side == monMain then
+				utils.debug( "Airship: monitor_touch event")
+				for j,k in ipairs( self.buttons ) do
+					local x1, y1, x2, y2 = k:getBounds( )
+					if clickX >= x1 and clickX <= x2 and clickY >= y1 and clickY <=y2 then
+						k:click( )
+					end
+				end
+			elseif side == monDebug then
+				utils.debug( "Airship: debug monitor_touch event, exiting" )
+				exit = true
+			else
+				utils.debug( "Airship: monitor_touch event on unknown monitor" )
+			end
+		elseif event == "terminate" then
+			utils.debug( "Airship: exiting airship control" )
+			exit = true
+		elseif event ~= "timer" then
+			utils.debug( "Airship: Unhandled event: " .. event )
+		end
+	end
+
+end
+
+function airship:drawScreen( )
+	term.clear( )
+	utils.setTextDefaults( )
+
+	for j,k in ipairs( self.buttons ) do
+		k:draw( )
+	end
+	term.setCursorPos( 1, 1 )
+end
+
+function airship:move( dir )
+	peripheral.call( self.xmitSide, "setFreq", dir )
+	redstone.setOutput( self.xmitSide, true )
+	sleep( 2 )
+	redstone.setOutput( self.xmitSide, false )
+end

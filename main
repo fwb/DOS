@@ -1,10 +1,12 @@
 dofile( "class" )
 dofile( "api/button" )
+dofile( "airship" )
 
 -- TODO: move config to file
-local monMain = "left"
-local monDebug = "top"
+monMain = "left"
+monDebug = "top"
 local wallpaperPath = "/wallpaper"
+local timeout = 10 -- screensaver timeout
 -- end config
 
 local b = { }
@@ -86,13 +88,14 @@ else
 	utils.debug( "Specified wallpaper not found" )
 end
 
-table.insert( b, button:new( 20, 20, "Reboot", 
-	function ( )
-		utils.debug( "Reboot button clicked" )
-		sleep( 2 )
-		os.reboot( )
-	end
+local airshipcontrol = airship:new( )
+
+table.insert( b, button:new( 20, 12, "Airship", 
+	function( )
+		airshipcontrol:run( )
+	end 
 ) )
+
 table.insert( b, button:new( 20, 16, "Paint", 
 	function ( )
 		utils.debug( "Starting Paint program, click this monitor to exit" )
@@ -137,6 +140,13 @@ table.insert( b, button:new( 20, 16, "Paint",
 		--shell.run( "/rom/programs/monitor", "left", "/rom/programs/color/paint", "/image" )
 	end 
 ) )
+table.insert( b, button:new( 20, 20, "Reboot", 
+	function ( )
+		utils.debug( "Reboot button clicked" )
+		sleep( 2 )
+		os.reboot( )
+	end
+) )
 table.insert( b, button:new( 20, 24, "Exit", 
 	function( ) 
 		utils.debug( "Exit button clicked, terminating" )
@@ -144,6 +154,8 @@ table.insert( b, button:new( 20, 24, "Exit",
 		exit = true
 	end
 ) )
+
+local timer = 0
 
 -- draw the home screen
 while not exit do
