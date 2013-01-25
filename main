@@ -1,15 +1,25 @@
 dofile( "class" )
 dofile( "api/button" )
 
-local b = { }
-local exit = false
-
+-- TODO: move config to file
 local monMain = "left"
 local monDebug = "top"
+local wallpaperPath = "/wallpaper"
+-- end config
+
+local b = { }
+local exit = false
+local wallpaper = nil
+local sizeX, sizeY
 
 function drawDesktop( )
 	term.clear( )
+	-- draw wallpaper
+	if wallpaper ~= nil then
+		paintutils.drawImage( wallpaper, sizeX/3, sizeY/3 )
+	end
 	-- draw widgets
+	utils.setTextDefaults( )
 	utils.clock( )
 	-- draw buttons
 	for i,n in ipairs( b ) do
@@ -19,14 +29,41 @@ function drawDesktop( )
 	term.setCursorPos( 1, 1 )
 end
 
+function writeConsole( str )
+	local x, y = term.getSize( )
+	term.setCursorPos( 1, y )
+	term.write( str )
+	term.scroll( 1 )
+	term.setCursorPos( 1, y )
+end
+
+-- check for required peripherals
+
 if not term.isColor( ) then
 	print( "An advanced computer is required." )
 	return
 end
 
+if peripheral.getType( monMain ) ~= "monitor" then
+	print( "Main monitor not attached to '" .. monMain .. "'" )
+	return
+end
+
+if peripheral.getType( monDebug ) ~= "monitor" then
+	print( "Debug monitor not attached to '" .. monDebug .. "'" )
+	return
+end
+
+term.setTextColor( colors.red )
+term.setBackgroundColor( colors.black )
+term.clear( )
+writeConsole( ">>> DOS Starting Up..." )
+writeConsole( ">>> Hold CTRL+T to return to console" )
+
 mon = peripheral.wrap( "left" )
 mon.setTextScale( 0.5 )
 term.redirect( mon )
+sizeX, sizeY = term.getSize( )
 
 local missing = 0
 if not os.loadAPI( "api/utils" ) then missing = 1 end
@@ -38,6 +75,16 @@ end
 
 utils.debugInit( )
 utils.init( )
+
+-- attempt to load wallpaper
+if fs.exists( wallpaperPath ) then
+	wallpaper = paintutils.loadImage( wallpaperPath )
+	if wallpaper == nil then
+		utils.debug( "Error reading wallpaper file" )
+	end
+else
+	utils.debug( "Specified wallpaper not found" )
+end
 
 table.insert( b, button:new( 20, 20, "Reboot", 
 	function ( )
