@@ -1,13 +1,21 @@
 dofile( "class" )
 dofile( "api/button" )
+dofile( "api/config" )
 dofile( "airship" )
 
--- TODO: move config to file
-monMain = "left"
-monDebug = "top"
-local wallpaperPath = "/wallpaper"
-local splashPath = "/logo"
-local timeout = 10 -- screensaver timeout
+-- parse config file
+mainConfig = config:new( "dos.conf" )
+
+if not mainConfig:load( ) then
+	print( "Error loading config file" )
+	return
+end
+
+monMain = mainConfig:get( "monMain" )
+monDebug = mainConfig:get( "monDebug" )
+local wallpaperPath = mainConfig:get( "wallpaperPath" )
+local splashPath = mainConfig:get( "splashPath" )
+local timeout = mainConfig:get( "timeout" )
 -- end config
 
 local b = { }

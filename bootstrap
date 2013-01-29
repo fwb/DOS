@@ -1,8 +1,5 @@
-local baseURL = "http://raw.github.com/fwb/DOS/master/"
+local baseURL = "https://raw.github.com/fwb/DOS/master/"
 
--- pass this function a string with the full path to a file
--- avialable at the baseURL; downloads and writes file,
--- creating directories as needed
 function wget( file )
 	local filename = fs.getName( file )
 
@@ -10,16 +7,15 @@ function wget( file )
 		local path = string.sub( file, 0, string.len( file ) - string.len( filename ) )
 		print( "Path [" .. path .. "] File [" .. filename .. "]" )
 		if not fs.exists( path ) then
-			if not fs.makeDir( path ) then
-				print( "ERROR: cannot create path [" .. path .. "]" )
-			end
+			fs.makeDir( path )
 		end
 	end
 
 	local url = baseURL .. file
-	
+
+	print( "Retrieving " .. url )
+
 	local data = http.get( url ).readAll( )
-	print( data )
 	if fs.exists( file ) then
 		fs.delete( file )
 	end
@@ -36,3 +32,19 @@ if not http then
 end
 
 wget( "manifest" )
+
+local fh = io.open( "manifest", "r" )
+
+print( "File contents:" )
+while true do
+	local line = fh:read( )
+	if line == nil then
+		break
+	end
+
+	wget( line )
+end
+
+if not fs.exists( "dos.conf" ) then
+	fs.copy( "dos.conf-SAMPLE", "dos.conf" )
+end

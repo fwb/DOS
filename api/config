@@ -1,0 +1,42 @@
+config = { 
+	settings = { },
+	delim = "="
+}
+
+local config_mt = class( config )
+
+function config:new( filename )
+	return setmetatable( {filename=filename}, config_mt )
+end
+
+function config:load( )
+	if not fs.exists( self.filename ) then
+		print( "CONFIG: specified config file not found" )
+		return false
+	end
+
+	local fh = io.open( self.filename, "r" )
+	while true do
+		local line = fh:read( )
+		if line == nil then break end
+		
+		local key,value
+		_, _, key, value = string.find( line, "(%a+)%s*=%s*([%a/]+)" )
+		if value == nil then
+			_, _, key, value = string.find( line, "(%a+)%s*=%s*(%d+)" )
+			if value == nil then
+				print( "CONFIG: failed to parse line [" .. line .. "]" )
+				break
+			end
+		end
+		
+		print( "[" .. key .. "]=[" .. value .. "]" )
+		self.settings[key] = value
+	end
+
+	return true
+end
+
+function config:get( key )
+	return self.settings[key]
+end
