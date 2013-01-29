@@ -28,6 +28,7 @@ function config:load( )
 				print( "CONFIG: failed to parse line [" .. line .. "]" )
 				break
 			end
+			value = tonumber( value )
 		end
 		
 		print( "[" .. key .. "]=[" .. value .. "]" )

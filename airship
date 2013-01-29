@@ -1,17 +1,6 @@
 airship = {
-	buttons = { },
-	xmitSide = "right",
-	wallpaperPath = "/airship-wallpaper",
-	wallpaper = nil,
-	sizeX = 0,
-	sizeY = 0,
-	-- wireless redstone frequencies for 6axis frame machine
-	up = 3501,
-	down = 3502,
-	north = 3503,
-	east = 3504,
-	south = 3505,
-	west = 3506
+	configFile = "airship.conf",
+	buttons = { }
 }
 
 local airship_mt = class( airship )
@@ -29,6 +18,21 @@ function airship:run( )
 	self.sizeX, self.sizeY = term.getSize( )
 
 	utils.debug( "Starting Airship Control, click this monitor to exit" )
+
+	local airshipConfig = config:new( self.configFile )
+	if not airshipConfig:load( ) then
+		utils.debug( "Airship: error loading config file" )
+		return
+	end
+
+	self.xmitSide = airshipConfig:get( "xmitSide" )
+	self.wallpaperPath = airshipConfig:get( "wallpaperPath" )
+	self.up = airshipConfig:get( "up" )
+	self.down = airshipConfig:get( "down" )
+	self.north = airshipConfig:get( "north" )
+	self.east = airshipConfig:get( "east" )
+	self.south = airshipConfig:get( "south" )
+	self.west = airshipConfig:get( "west" )
 
 	-- load wallpaper if available
 	if fs.exists( self.wallpaperPath ) then
@@ -161,7 +165,7 @@ function airship:drawScreen( )
 end
 
 function airship:move( dir, str )
-	utils.debug( "Airship: moving " .. str )
+	utils.debug( "Airship: moving " .. str .. "[" .. self.xmitSide .. "]" )
 	peripheral.call( self.xmitSide, "setFreq", dir )
 	redstone.setOutput( self.xmitSide, true )
 	sleep( 1.5 )

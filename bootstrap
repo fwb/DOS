@@ -48,3 +48,7 @@ end
 if not fs.exists( "dos.conf" ) then
 	fs.copy( "dos.conf-SAMPLE", "dos.conf" )
 end
+
+if not fs.exists( "airship.conf" ) then
+	fs.copy( "airship.conf-SAMPLE", "airship.conf" )
+end
