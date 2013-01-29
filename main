@@ -6,12 +6,14 @@ dofile( "airship" )
 monMain = "left"
 monDebug = "top"
 local wallpaperPath = "/wallpaper"
+local splashPath = "/logo"
 local timeout = 10 -- screensaver timeout
 -- end config
 
 local b = { }
 local exit = false
 local wallpaper = nil
+local splash = nil
 local sizeX, sizeY
 
 function drawDesktop( )
@@ -78,6 +80,20 @@ end
 utils.debugInit( )
 utils.init( )
 
+-- display splash screen
+if fs.exists( splashPath ) then
+	splash = paintutils.loadImage( splashPath )
+	if splash == nil then
+		utils.debug( "Error reading splash screen file" )
+	else
+		term.clear( )
+		paintutils.drawImage( splash, sizeX/3, sizeY/3 )
+		sleep( 5 )
+	end
+else
+	utils.debug( "Specified splash screen not found" )
+end
+
 -- attempt to load wallpaper
 if fs.exists( wallpaperPath ) then
 	wallpaper = paintutils.loadImage( wallpaperPath )
@@ -99,7 +115,6 @@ table.insert( b, button:new( 20, 12, "Airship",
 table.insert( b, button:new( 20, 16, "Paint", 
 	function ( )
 		utils.debug( "Starting Paint program, click this monitor to exit" )
-		sleep( 2 )
 		local cr = coroutine.create( 
 			function( )
 				shell.run( "paint", "/testimage" )
@@ -143,14 +158,13 @@ table.insert( b, button:new( 20, 16, "Paint",
 table.insert( b, button:new( 20, 20, "Reboot", 
 	function ( )
 		utils.debug( "Reboot button clicked" )
-		sleep( 2 )
+		sleep( 1 )
 		os.reboot( )
 	end
 ) )
 table.insert( b, button:new( 20, 24, "Exit", 
 	function( ) 
 		utils.debug( "Exit button clicked, terminating" )
-		sleep( 2 )
 		exit = true
 	end
 ) )

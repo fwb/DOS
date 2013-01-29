@@ -1,0 +1,38 @@
+local baseURL = "http://raw.github.com/fwb/DOS/master/"
+
+-- pass this function a string with the full path to a file
+-- avialable at the baseURL; downloads and writes file,
+-- creating directories as needed
+function wget( file )
+	local filename = fs.getName( file )
+
+	if string.len( file ) > string.len( filename ) then
+		local path = string.sub( file, 0, string.len( file ) - string.len( filename ) )
+		print( "Path [" .. path .. "] File [" .. filename .. "]" )
+		if not fs.exists( path ) then
+			if not fs.makeDir( path ) then
+				print( "ERROR: cannot create path [" .. path .. "]" )
+			end
+		end
+	end
+
+	local url = baseURL .. file
+	
+	local data = http.get( url ).readAll( )
+	print( data )
+	if fs.exists( file ) then
+		fs.delete( file )
+	end
+	
+	local stream = assert( io.open( file, "w" ) )
+	stream:write( data )
+	stream:close( )
+
+end
+
+if not http then
+	print( "ERROR: HTTP API not available" )
+	return
+end
+
+wget( "manifest" )

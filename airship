@@ -1,6 +1,10 @@
 airship = {
 	buttons = { },
 	xmitSide = "right",
+	wallpaperPath = "/airship-wallpaper",
+	wallpaper = nil,
+	sizeX = 0,
+	sizeY = 0,
 	-- wireless redstone frequencies for 6axis frame machine
 	up = 3501,
 	down = 3502,
@@ -20,16 +24,21 @@ function airship:run( )
 	local event = { }
 	local tFilter = { }
 	local exit = false
-	local sizeX, sizeY = term.getSize( )
+	local repeatFlag = false
+	local repeatDir, repeatNum, repeatCounter
+	self.sizeX, self.sizeY = term.getSize( )
 
 	utils.debug( "Starting Airship Control, click this monitor to exit" )
-	sleep( 2 )
 
-	table.insert( self.buttons, button:new( 5, 15, "Test", 
-		function( )
-			utils.debug( "Airship: Test button clicked" )
+	-- load wallpaper if available
+	if fs.exists( self.wallpaperPath ) then
+		self.wallpaper = paintutils.loadImage( self.wallpaperPath )
+		if wallpaper == nil then
+			utils.debug( "Airship: error reading wallpaper file" )
 		end
-	))
+	else
+		utils.debug( "Airship: specified wallpaper not found" )
+	end
 	
 	table.insert( self.buttons, button:new( 5, 19, "Exit",
 		function( )
@@ -40,39 +49,56 @@ function airship:run( )
 
 	table.insert( self.buttons, button:new( 22, 18, "Up", 
 		function( )
-			self:move( self.up ) 
+			self:move( self.up, "up" ) 
 		end
 	))
 	table.insert( self.buttons, button:new( 20, 22, "Down", 
 		function( )
-			self:move( self.down ) 
+			self:move( self.down, "down" ) 
 		end
 	))
 	table.insert( self.buttons, button:new( 36, 16, "North", 
 		function( )
-			self:move( self.north ) 
+			self:move( self.north, "north" ) 
 		end
 	))
 	table.insert( self.buttons, button:new( 44, 20, "East", 
 		function( )
-			self:move( self.east ) 
+			self:move( self.east, "east" ) 
 		end
 	))
 	table.insert( self.buttons, button:new( 36, 24, "South", 
 		function( )
-			self:move( self.south )
+			self:move( self.south, "south" )
 		end
 	))
 	table.insert( self.buttons, button:new( 29, 20, "West", 
 		function( )
-			self:move( self.west )
+			self:move( self.west, "west" )
 		end
 	))
 	table.insert( self.buttons, button:new( 36, 20, "Stop ", 
 		function( )
-
+			self.repeatFlag = false
 		end
 	))
+	table.insert( self.buttons, button:new( 36, 12, "North x100",
+		function( )
+			self.repeatFlag = true
+			self.repeatDir = self.north
+			self.repeatCounter = 0
+			self.repeatNum = 100
+		end
+	))
+	table.insert( self.buttons, button:new( 36, 29, "West x1000",
+		function( )
+			self.repeatFlag = true
+			self.repeatDir = self.west
+			self.repeatCounter = 0
+			self.repeatNum = 1000
+		end
+	))
+
 	
 	for i,n in ipairs( self.buttons ) do
 		local x,y,xmax,ymax = n:getBounds( )
@@ -85,6 +111,14 @@ function airship:run( )
 		self:drawScreen( )
 		os.startTimer( 1 )
 		local event, side, clickX, clickY = os.pullEventRaw( )
+
+		if self.repeatFlag == true then
+			self:move( self.repeatDir, "on autopilot" )
+			self.repeatCounter = self.repeatCounter + 1
+			if self.repeatCounter >= self.repeatNum then
+				self.repeatFlag = false
+			end
+		end
 
 		if event == "monitor_touch" then
 			if side == monMain then
@@ -115,15 +149,21 @@ function airship:drawScreen( )
 	term.clear( )
 	utils.setTextDefaults( )
 
+	if self.wallpaper ~= nil then
+		paintutils.drawImage( self.wallpaper, self.sizeX/2, self.sizeY/2 )
+		utils.setTextDefaults( )
+	end
+
 	for j,k in ipairs( self.buttons ) do
 		k:draw( )
 	end
 	term.setCursorPos( 1, 1 )
 end
 
-function airship:move( dir )
+function airship:move( dir, str )
+	utils.debug( "Airship: moving " .. str )
 	peripheral.call( self.xmitSide, "setFreq", dir )
 	redstone.setOutput( self.xmitSide, true )
-	sleep( 2 )
+	sleep( 1.5 )
 	redstone.setOutput( self.xmitSide, false )
 end
