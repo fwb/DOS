@@ -1,0 +1,13 @@
+app = {
+	
+}
+
+local app_mt = class( app )
+
+function app:new( )
+	return setmetatable( { }, app_mt )
+end
+
+function app:run( )
+
+end

@@ -5,7 +5,7 @@ function wget( file )
 
 	if string.len( file ) > string.len( filename ) then
 		local path = string.sub( file, 0, string.len( file ) - string.len( filename ) )
-		print( "Path [" .. path .. "] File [" .. filename .. "]" )
+		--print( "Path [" .. path .. "] File [" .. filename .. "]" )
 		if not fs.exists( path ) then
 			fs.makeDir( path )
 		end
@@ -35,7 +35,6 @@ wget( "manifest" )
 
 local fh = io.open( "manifest", "r" )
 
-print( "File contents:" )
 while true do
 	local line = fh:read( )
 	if line == nil then

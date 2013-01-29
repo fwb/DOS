@@ -176,6 +176,13 @@ table.insert( b, button:new( 20, 24, "Exit",
 		exit = true
 	end
 ) )
+table.insert( b, button:new( 20, 28, "Update",
+	function( )
+		term.clear( )
+		shell.run( "bootstrap" )
+		os.reboot( )
+	end
+))
 
 local timer = 0
 
