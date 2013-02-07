@@ -34,6 +34,20 @@ function airship:run( )
 	self.south = airshipConfig:get( "south" )
 	self.west = airshipConfig:get( "west" )
 
+	self.northLauncher = airshipConfig:get( "northLauncher" )
+	self.westLauncher = airshipConfig:get( "westLauncher" )
+	self.southLauncher = airshipConfig:get( "southLauncher" )
+
+	self.northRail = airshipConfig:get( "southLauncher" )
+	self.eastRail = airshipConfig:get( "southLauncher" )
+	self.southRail = airshipConfig:get( "southLauncher" )
+	self.westRail = airshipConfig:get( "southLauncher" )
+
+	self.northGrenade = airshipConfig:get( "southLauncher" )
+	self.eastGrenade = airshipConfig:get( "southLauncher" )
+	self.southGrenade = airshipConfig:get( "southLauncher" )
+	self.westGrenade = airshipConfig:get( "southLauncher" )
+
 	-- load wallpaper if available
 	if fs.exists( self.wallpaperPath ) then
 		self.wallpaper = paintutils.loadImage( self.wallpaperPath )
@@ -51,42 +65,42 @@ function airship:run( )
 		end
 	))
 
-	table.insert( self.buttons, button:new( 22, 18, "Up", 
+	table.insert( self.buttons, button:new( 22, 24, "Up", 
 		function( )
 			self:move( self.up, "up" ) 
 		end
 	))
-	table.insert( self.buttons, button:new( 20, 22, "Down", 
+	table.insert( self.buttons, button:new( 20, 28, "Down", 
 		function( )
 			self:move( self.down, "down" ) 
 		end
 	))
-	table.insert( self.buttons, button:new( 36, 16, "North", 
+	table.insert( self.buttons, button:new( 36, 22, "North", 
 		function( )
 			self:move( self.north, "north" ) 
 		end
 	))
-	table.insert( self.buttons, button:new( 44, 20, "East", 
+	table.insert( self.buttons, button:new( 44, 26, "East", 
 		function( )
 			self:move( self.east, "east" ) 
 		end
 	))
-	table.insert( self.buttons, button:new( 36, 24, "South", 
+	table.insert( self.buttons, button:new( 36, 30, "South", 
 		function( )
 			self:move( self.south, "south" )
 		end
 	))
-	table.insert( self.buttons, button:new( 29, 20, "West", 
+	table.insert( self.buttons, button:new( 29, 26, "West", 
 		function( )
 			self:move( self.west, "west" )
 		end
 	))
-	table.insert( self.buttons, button:new( 36, 20, "Stop ", 
+	table.insert( self.buttons, button:new( 36, 26, "Stop ", 
 		function( )
 			self.repeatFlag = false
 		end
 	))
-	table.insert( self.buttons, button:new( 36, 12, "North x100",
+	table.insert( self.buttons, button:new( 44, 22, "North x100",
 		function( )
 			self.repeatFlag = true
 			self.repeatDir = self.north
@@ -94,7 +108,7 @@ function airship:run( )
 			self.repeatNum = 100
 		end
 	))
-	table.insert( self.buttons, button:new( 36, 29, "West x1000",
+	table.insert( self.buttons, button:new( 44, 30, "West x1000",
 		function( )
 			self.repeatFlag = true
 			self.repeatDir = self.west
@@ -103,6 +117,70 @@ function airship:run( )
 		end
 	))
 
+	-- Fire control
+	table.insert( self.buttons, button:new( 31, 3, "North",
+		function( )
+			self:pulse( self.northLauncher )
+		end
+	))
+	table.insert( self.buttons, button:new( 39, 3, "South",
+		function( )
+			self:pulse( self.southLauncher )
+		end
+	))
+	table.insert( self.buttons, button:new( 47, 3, "West",
+		function( )
+			self:pulse( self.westLauncher )
+		end
+	))
+
+	table.insert( self.buttons, button:new( 31, 7, "North",
+		function( )
+			self:pulse( self.northLauncher )
+		end
+	))
+	table.insert( self.buttons, button:new( 39, 7, "East",
+		function( )
+			self:pulse( self.northLauncher )
+		end
+	))
+	table.insert( self.buttons, button:new( 46, 7, "South",
+		function( )
+			self:pulse( self.northLauncher )
+		end
+	))
+	table.insert( self.buttons, button:new( 54, 7, "West",
+		function( )
+			self:pulse( self.northLauncher )
+		end
+	))
+
+	table.insert( self.buttons, button:new( 31, 11, "North",
+		function( )
+			self:pulse( self.northLauncher )
+		end
+	))
+	table.insert( self.buttons, button:new( 39, 11, "East",
+		function( )
+			self:pulse( self.northLauncher )
+		end
+	))
+	table.insert( self.buttons, button:new( 46, 11, "South",
+		function( )
+			self:pulse( self.northLauncher )
+		end
+	))
+	table.insert( self.buttons, button:new( 54, 11, "West",
+		function( )
+			self:pulse( self.northLauncher )
+		end
+	))
+
+	table.insert( self.buttons, button:new( 32, 15, "!!!FIRE EVERYTHING!!!",
+		function( )
+			self:fireAll( )
+		end
+	))
 	
 	for i,n in ipairs( self.buttons ) do
 		local x,y,xmax,ymax = n:getBounds( )
@@ -158,6 +236,21 @@ function airship:drawScreen( )
 		utils.setTextDefaults( )
 	end
 
+	term.setCursorPos( 34, 20 )
+	term.write( "Airship Movement" )
+
+	term.setCursorPos( 34, 1 )
+	term.write( "Launch Controls" )
+	
+	term.setCursorPos( 21, 4)
+	term.write( "Missiles" )
+
+	term.setCursorPos( 21, 8 )
+	term.write( "Railguns" )
+
+	term.setCursorPos( 21, 12 )
+	term.write( "Grenades" )
+
 	for j,k in ipairs( self.buttons ) do
 		k:draw( )
 	end
@@ -170,4 +263,28 @@ function airship:move( dir, str )
 	redstone.setOutput( self.xmitSide, true )
 	sleep( 1.5 )
 	redstone.setOutput( self.xmitSide, false )
+end
+
+function airship:pulse( freq )
+	peripheral.call( self.xmitSide, "setFreq", freq )
+	redstone.setOutput( self.xmitSide, true )
+	sleep( 0.25 )
+	redstone.setOutput( self.xmitSide, false )
+end
+
+function airship:fireAll( )
+	self:pulse( self.northLauncher )
+	self:pulse( self.southLauncher )
+	self:pulse( self.westLauncher )
+
+	for i=1,3 do
+		self:pulse( self.northRail )
+		self:pulse( self.northGrenade )
+		self:pulse( self.eastRail )
+		self:pulse( self.eastGrenade )
+		self:pulse( self.southRail )
+		self:pulse( self.southGrenade )
+		self:pulse( self.westRail )
+		self:pulse( self.westGrenade )
+	end
 end
