@@ -1,5 +1,6 @@
-# Sublime Text 2
+# Sublime Text
 sftp-config.json
+*.sublime-*
 
 #################
 ## Eclipse

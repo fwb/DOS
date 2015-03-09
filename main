@@ -1,7 +1,18 @@
+colors = require( "colors" )
+component = require( "component" )
+computer = require( "computer" )
+event = require( "event" )
+internet = require( "internet" )
+fs = require( "filesystem" )
+shell = require( "shell" )
+term = require( "term" )
+
+--gpu, gpuDebug = nil
+
 dofile( "class" )
 dofile( "api/button" )
 dofile( "api/config" )
-dofile( "airship" )
+dofile( "api/utils" )
 
 -- parse config file
 mainConfig = config:new( "dos.conf" )
@@ -11,8 +22,6 @@ if not mainConfig:load( ) then
 	return
 end
 
-monMain = mainConfig:get( "monMain" )
-monDebug = mainConfig:get( "monDebug" )
 local wallpaperPath = mainConfig:get( "wallpaperPath" )
 local splashPath = mainConfig:get( "splashPath" )
 local timeout = mainConfig:get( "timeout" )
@@ -25,196 +34,165 @@ local splash = nil
 local sizeX, sizeY
 
 function drawDesktop( )
-	term.clear( )
+	utils:clear( gpu )
 	-- draw wallpaper
 	if wallpaper ~= nil then
-		paintutils.drawImage( wallpaper, sizeX/3, sizeY/3 )
+		--paintutils.drawImage( wallpaper, sizeX/3, sizeY/3 )
 	end
 	-- draw widgets
-	utils.setTextDefaults( )
-	utils.clock( )
+	utils:setTextDefaults( gpu )
+	utils:clock( gpu )
 	-- draw buttons
 	for i,n in ipairs( b ) do
-		n:draw( )
+		n:draw( gpu )
 	end
 	-- other stuff
-	term.setCursorPos( 1, 1 )
-end
-
-function writeConsole( str )
-	local x, y = term.getSize( )
-	term.setCursorPos( 1, y )
-	term.write( str )
-	term.scroll( 1 )
-	term.setCursorPos( 1, y )
 end
 
 -- check for required peripherals
 
-if not term.isColor( ) then
-	print( "An advanced computer is required." )
+if not term.isAvailable( ) or not component.gpu then
+	print( "A graphics card and attached screen are required." )
 	return
 end
 
-if peripheral.getType( monMain ) ~= "monitor" then
-	print( "Main monitor not attached to '" .. monMain .. "'" )
-	return
-end
-
-if peripheral.getType( monDebug ) ~= "monitor" then
-	print( "Debug monitor not attached to '" .. monDebug .. "'" )
-	return
-end
-
-term.setTextColor( colors.red )
-term.setBackgroundColor( colors.black )
-term.clear( )
-writeConsole( ">>> DOS Starting Up..." )
-writeConsole( ">>> Hold CTRL+T to return to console" )
-
-mon = peripheral.wrap( "left" )
-mon.setTextScale( 0.5 )
-term.redirect( mon )
-sizeX, sizeY = term.getSize( )
-
-local missing = 0
-if not os.loadAPI( "api/utils" ) then missing = 1 end
-
-if missing == 1 then
-	print( "A required API is missing." )
-	return
-end
-
-utils.debugInit( )
-utils.init( )
+gpu = utils:init( mainConfig )
+gpuDebug = utils:debugInit( mainConfig )
+utils:writeConsole( gpuDebug, ">>> DOS Starting Up..." )
+utils:writeConsole( gpuDebug, ">>> Press Ctrl+Alt+C to return to console" )
 
 -- display splash screen
-if fs.exists( splashPath ) then
+if utils:checkFile( splashPath ) then
+	--[[
 	splash = paintutils.loadImage( splashPath )
 	if splash == nil then
-		utils.debug( "Error reading splash screen file" )
+		utils:writeConsole( "Error reading splash screen file" )
 	else
 		term.clear( )
 		paintutils.drawImage( splash, sizeX/3, sizeY/3 )
 		sleep( 5 )
 	end
+	]]
 else
-	utils.debug( "Specified splash screen not found" )
+	utils:writeConsole( gpuDebug, "Specified splash screen not found" )
 end
 
 -- attempt to load wallpaper
-if fs.exists( wallpaperPath ) then
+if utils:checkFile( wallpaperPath ) then
+	--[[
 	wallpaper = paintutils.loadImage( wallpaperPath )
 	if wallpaper == nil then
 		utils.debug( "Error reading wallpaper file" )
 	end
+	]]
 else
-	utils.debug( "Specified wallpaper not found" )
+	utils:writeConsole( gpuDebug, "Specified wallpaper not found" )
 end
 
-local airshipcontrol = airship:new( )
-
-table.insert( b, button:new( 20, 12, "Airship", 
-	function( )
-		airshipcontrol:run( )
-	end 
-) )
-
-table.insert( b, button:new( 20, 16, "Paint", 
+table.insert( b, button:new( 20, 16, "Reactor Monitor", 
 	function ( )
-		utils.debug( "Starting Paint program, click this monitor to exit" )
+		utils:writeConsole( gpuDebug, "Starting Reactor Monitor..." )
+
 		local cr = coroutine.create( 
 			function( )
-				shell.run( "paint", "/testimage" )
+				shell.execute( "/dos/apps/reactor" )
 			end
 		)
 
-		local event = { }
+		local signal = { }
 		local tFilter = { }
 
-		mon.setTextScale( 1 )
-		while true do
-			if event[1] == "monitor_touch" then
-				if event[2] == monMain then
-					--utils.debug( "monitor_touch -> mouse_click" )
-					os.queueEvent( "mouse_click", 1, unpack( event, 3 ) )
-				elseif event[2] == monDebug then
-					utils.debug( "Debug monitor clicked, exiting" )
-					break
-				end
-			end
+		utils:scaleRes( gpu, 2 )
 
-			local ok, param = coroutine.resume( cr, unpack( event ) )
+		while true do
+			utils:writeConsole( gpuDebug, "Unpacking event" )
+			local e = table.unpack( signal )
+			local ok, param = coroutine.resume( cr, e )
 			if not ok then
-				utils.debug( "Paint error: " .. param )
+				utils:writeConsole( gpuDebug, "Reactor Monitor error: " .. param )
 				break
 			else
 				tFilter = param
 			end
 
 			if coroutine.status( cr ) == "dead" then
-				utils.debug ( "Paint coroutine died" )
+				utils:writeConsole( gpuDebug, "Reactor Monitor died." )
 				break
 			end
 
-			event = { os.pullEventRaw( ) }
+			signal = { event.pull( 1, "touch" ) }
 		end
-		mon.setTextScale( 0.5 )
-		--shell.run( "/rom/programs/monitor", "left", "/rom/programs/color/paint", "/image" )
+
+		utils:scaleRes( gpu, 1 )
+
 	end 
 ) )
 table.insert( b, button:new( 20, 20, "Reboot", 
 	function ( )
-		utils.debug( "Reboot button clicked" )
-		sleep( 1 )
-		os.reboot( )
+		utils:writeConsole( gpuDebug, "Reboot button clicked" )
+		os.sleep( 1 )
+		computer.shutdown( true )
 	end
 ) )
 table.insert( b, button:new( 20, 24, "Exit", 
 	function( ) 
-		utils.debug( "Exit button clicked, terminating" )
+		utils:writeConsole( gpuDebug, "Exit button clicked, terminating" )
 		exit = true
 	end
 ) )
 table.insert( b, button:new( 20, 28, "Update",
 	function( )
-		term.clear( )
-		shell.run( "bootstrap" )
-		os.reboot( )
+		utils:writeConsole( gpuDebug, "Update button clicked, running bootstrap" )
+		utils:clear( gpu )
+		shell.execute( "bootstrap" )
+		utils:writeConsole( gpuDebug, "bootstrap returned, rebooting!" )
+		os.sleep( 1 )
+		computer.shutdown( true )
 	end
 ))
 
 local timer = 0
 
 -- draw the home screen
+local signal, e1, e2, e3, e4, e5 = nil
+
 while not exit do
 	drawDesktop( )
-	os.startTimer( 1 )
-	local event, side, clickX, clickY = os.pullEventRaw( )
+	
+	signal, e1, e2, e3, e4, e5 = event.pull( 1, nil )
 
-	term.setCursorPos( 1, 2 )
-	if event == "monitor_touch" then
-		local touchCoords = "(" .. clickX .. "," .. clickY .. ")"
-		if side == monMain then
-			utils.debug( "Touchscreen Event: " .. touchCoords )
-			for i,n in ipairs( b ) do
-				local x1, y1, x2, y2 = n:getBounds( )
-				if clickX >= x1 and clickX <= x2 and clickY >= y1 and clickY <= y2 then
-					n:click( )
+	if signal ~= nil then
+		utils:writeConsole( gpuDebug, "Signal: " .. signal )
+
+		if signal == "key_down" then
+			exit = true
+		elseif signal == "touch" then
+			local clickX = e2
+			local clickY = e3
+			local touchCoords = "(" .. clickX .. "," .. clickY .. ")"
+			if e1 == component.get( tostring( mainConfig:get( "screenMain" ), "screen" ) ) then
+				utils:writeConsole( gpuDebug, "Touchscreen Event: " .. touchCoords )
+				for i,n in ipairs( b ) do
+					local x1, y1, x2, y2 = n:getBounds( )
+					if clickX >= x1 and clickX <= x2 and clickY >= y1 and clickY <= y2 then
+						n:click( )
+					end
 				end
+			elseif e1 == component.get( tostring( mainConfig:get( "screenDebug" ), "screen" ) ) then
+				utils:writeConsole( gpuDebug, "Touchscreen event on debug monitor: " .. touchCoords )
+			else
+				utils:writeConsole( gpuDebug, "Touchscreen event on unknown monitor: " .. touchCoords )
+				utils:writeConsole( gpuDebug, "id: " .. e1 )
+				utils:writeConsole( gpuDebug, "m1: " .. component.get( tostring( mainConfig:get( "gpuMain" ), "gpu" ) ) )
 			end
-		elseif side == monDebug then
-			utils.debug( "Touchscreen event on debug monitor: " .. touchCoords )
-		else
-			utils.debug( "Touchscreen event on unknown monitor: " .. touchCoords )
+		elseif signal == "terminate" then
+			utils:writeConsole( gpuDebug, "Terminating" )
+			exit = true
+		elseif signal ~= "timer" then
+			utils:writeConsole( gpuDebug, "Event: " .. signal )
 		end
-	elseif event == "terminate" then
-		utils.debug( "Terminating" )
-		exit = true
-	elseif event ~= "timer" then
-		utils.debug( "Event: " .. event )
 	end
 end
 
-term.restore( )
-
+utils:writeConsole( gpuDebug, "Cleaning up..." )
+utils:clear( gpu )

@@ -13,21 +13,18 @@ function button:getBounds( )
 	return self.x, self.y, self.x+string.len( self.text )+1, self.y+2
 end
 
-function button:draw( )
+function button:draw( gpu )
 	local len = string.len( self.text )
 	local border = self.corner .. string.rep( self.line, len ) .. self.corner
 	local x1, y1 = self:getBounds( )
-	term.setBackgroundColor( colors.cyan )
-	term.setTextColor( colors.white )
+	gpu.setBackground( 0x6699FF )
+	gpu.setForeground( 0xFFFFFF )
 
-	term.setCursorPos( x1, y1 )
-	term.write( border )
-	term.setCursorPos( x1, y1+1 )
-	term.write( "|" .. self.text .. "|" )
-	term.setCursorPos( x1, y1+2 )
-	term.write( border )
+	gpu.set( x1, y1, border )
+	gpu.set( x1, y1+1, "|" .. self.text .. "|" )
+	gpu.set( x1, y1+2, border )
 
-	utils.setTextDefaults( )
+	utils:setTextDefaults( gpu )
 end
 
 function button:click( )

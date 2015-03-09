@@ -1,33 +1,51 @@
 local baseURL = "https://raw.github.com/fwb/DOS/master/"
 
+local component = require( "component" )
+local internet = require( "internet" )
+local fs = require( "filesystem" )
+local shell = require( "shell" )
+
 function wget( file )
-	local filename = fs.getName( file )
+
+	local filename = fs.name( file )
+
+	--print( "File: " .. file .. ", " .. string.len( file ) .. " | Filename: " .. filename .. ", " .. string.len( filename ) )
+
+	local path = shell.getWorkingDirectory( )
 
 	if string.len( file ) > string.len( filename ) then
-		local path = string.sub( file, 0, string.len( file ) - string.len( filename ) )
-		--print( "Path [" .. path .. "] File [" .. filename .. "]" )
+		path = path .. fs.path( file )
+		--print( "Path " .. path .. ", file " .. filename )
 		if not fs.exists( path ) then
-			fs.makeDir( path )
+			fs.makeDirectory( path )
 		end
 	end
 
+	filename = fs.concat( path, filename )
 	local url = baseURL .. file
 
-	print( "Retrieving " .. url )
+	print( "Retrieving " .. url .. " to " .. filename .. "" )
 
-	local data = http.get( url ).readAll( )
-	if fs.exists( file ) then
-		fs.delete( file )
+	local status, data = pcall( internet.request, url )
+	if data then
+		if fs.exists( filename ) then
+			--print( "Replacing existing file " .. filename )
+			fs.remove( filename )
+		end
+		
+		--print( "Opening [" .. filename .. "] for writing" )
+
+		local stream = assert( io.open( filename, "w" ) )
+		for chunk in data do
+			stream:write( chunk )
+		end
+		stream:close( )
 	end
-	
-	local stream = assert( io.open( file, "w" ) )
-	stream:write( data )
-	stream:close( )
 
 end
 
-if not http then
-	print( "ERROR: HTTP API not available" )
+if not internet or not component.isAvailable( "internet" ) then
+	print( "ERROR: Internet access not available" )
 	return
 end
 
@@ -41,13 +59,11 @@ while true do
 		break
 	end
 
+	--print( "Read [" .. line .. "] from manifest.")
+
 	wget( line )
 end
 
-if not fs.exists( "dos.conf" ) then
+if not fs.exists( fs.concat( shell.getWorkingDirectory( ), "dos.conf" ) ) then
 	fs.copy( "dos.conf-SAMPLE", "dos.conf" )
-end
-
-if not fs.exists( "airship.conf" ) then
-	fs.copy( "airship.conf-SAMPLE", "airship.conf" )
 end

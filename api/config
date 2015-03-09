@@ -6,7 +6,7 @@ config = {
 local config_mt = class( config )
 
 function config:new( filename )
-	return setmetatable( {filename=filename}, config_mt )
+	return setmetatable( {filename=fs.concat( shell.getWorkingDirectory( ), filename )}, config_mt )
 end
 
 function config:load( )
@@ -21,14 +21,16 @@ function config:load( )
 		if line == nil then break end
 		
 		local key,value
-		_, _, key, value = string.find( line, "(%a+)%s*=%s*([%a/]+)" )
+		_, _, key, value = string.find( line, "(%a+)%s*=%s*([%w/]+)" )
+
 		if value == nil then
-			_, _, key, value = string.find( line, "(%a+)%s*=%s*(%d+)" )
-			if value == nil then
-				print( "CONFIG: failed to parse line [" .. line .. "]" )
-				break
-			end
-			value = tonumber( value )
+			print( "CONFIG: failed to parse line [" .. line .. "]" )
+			break
+		end
+
+		local i = tonumber( value )
+		if i ~= nil then
+			value = i
 		end
 		
 		print( "[" .. key .. "]=[" .. value .. "]" )

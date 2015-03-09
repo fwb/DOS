@@ -1,57 +1,74 @@
-function init( )
-	term.setBackgroundColor( colors.black )
-	term.setTextColor( colors.orange )
-	term.clear( )
-	term.setCursorPos( 3, 5 )
-	term.write( "Loading..." )
+utils = {
+	
+}
+
+local utils_mt = class( utils )
+
+function utils:init( config )
+	local gaddr = component.get( tostring( config:get( "gpuMain" ), "gpu" ) ) 
+	local saddr = component.get( tostring( config:get( "screenMain" ) ), "screen" )
+	component.setPrimary( "gpu", gaddr )
+	component.setPrimary( "screen", saddr )
+
+	local gpu = component.proxy( gaddr )
+	gpu.bind( saddr )
+
+	local w, h = gpu.maxResolution( )
+	gpu.setResolution( w, h )
+	utils:setTextDefaults( gpu )
+	utils:clear( gpu )
+
+	return gpu
 end
 
-function debugInit( )
-	dm = peripheral.wrap( "top" )
-	dm.setBackgroundColor( colors.black )
-	dm.setTextColor( colors.red )
-	dm.setTextScale( 0.5 )
-	dm.clear( )
-	debug( "Loading..." )
+function utils:debugInit( config )
+	local gaddr = component.get( tostring( config:get( "gpuDebug" ), "gpu" ) )
+	local saddr = component.get( tostring( config:get( "screenDebug" ) ), "screen" )
+
+	local gpu = component.proxy( gaddr )
+	gpu.bind( saddr )
+
+	local w, h = gpu.maxResolution( )
+	gpu.setResolution( w, h )
+	gpu.setBackground( colors.black )
+	gpu.setForeground( colors.white )
+	utils:clear( gpu )
+
+	return gpu
 end
 
-function debug( str )
-	local x, y = dm.getSize( )
-	dm.setCursorPos( 1, y )
-	dm.write( str )
-	dm.scroll( 1 )
+function utils:scaleRes( gpu, scale )
+	local w, h = gpu.maxResolution( )
+	gpu.setResolution( w / scale, h / scale )
 end
 
-function clock( )
-	local w,h = term.getSize( )
-	local time = textutils.formatTime( os.time( ), true )
-	term.setCursorPos( w-24, 1 )
-	term.write( "Minecraft Time: " )
-	term.write( time )
+function utils:clock( gpu )
+	local w, h = gpu.getResolution( )
+	gpu.set( w-24, 1, "Minecraft Time: " .. os.time( ) )
 end
 
-function setTextDefaults( )
-	term.setBackgroundColor( colors.black )
-	term.setTextColor( colors.orange )
+function utils:setTextDefaults( gpu )
+	gpu.setBackground( 0x000000 )
+	gpu.setForeground( 0xFF1000 )
 end
 
-function drawButton( x, y, str )
-	local len = string.len( str )
-	local border = "+" .. string.rep( "-", len ) .. "+"
-	term.setBackgroundColor( colors.cyan )
-	term.setTextColor( colors.white )
+function utils:scroll( gpu, lines )
+	local w, h = gpu.getResolution( )
+	gpu.copy( 1, 1 + lines, w, h - lines, 0, -lines )
+	gpu.fill( 1, h - lines + 1, w, lines, " " )
+end
 
-	term.setCursorPos( 1, 1 )
-	term.write( "Len: " .. len )
+function utils:writeConsole( gpu, str )
+	local w, h = gpu.getResolution( )
+	gpu.set( 1, h, str )
+	utils:scroll( gpu, 1 )
+end
 
-	term.setCursorPos( x-1, y-1 )
-	term.write( border )
+function utils:clear( gpu )
+	local w, h = gpu.getResolution( )
+	gpu.fill( 1, 1, w, h, " " )
+end
 
-	term.setCursorPos( x-1, y )
-	term.write( "|" .. str .. "|" )
-
-	term.setCursorPos( x-1, y+1 )
-	term.write( border )
-
-	utils.setTextDefaults( )
+function utils:checkFile( str )
+	return( fs.exists( fs.concat( shell.getWorkingDirectory( ), str ) ) )
 end

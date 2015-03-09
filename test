@@ -1,0 +1,27 @@
+colors = require( "colors" )
+component = require( "component" )
+event = require( "event" )
+internet = require( "internet" )
+fs = require( "filesystem" )
+shell = require( "shell" )
+term = require( "term" )
+
+dofile( "class" )
+dofile( "api/button" )
+dofile( "api/config" )
+dofile( "api/utils" )
+
+-- parse config file
+mainConfig = config:new( "dos.conf" )
+
+if not mainConfig:load( ) then
+	print( "Error loading config file" )
+	return
+end
+
+gpu = utils:init( mainConfig )
+w, h = gpu.getResolution( )
+utils:writeConsole( gpu, "Test AAAAA" )
+utils:writeConsole( gpu, "Test BBB" )
+utils:writeConsole( gpu, "Test CCCCCCCCC" )
+utils:writeConsole( gpu, "Test dddddd" )

@@ -1,5 +1,7 @@
-monMain=left
-monDebug=top
+gpuMain=d785
+screenMain=4823
+gpuDebug=6728
+screenDebug=f3ad
 wallpaperPath=/wallpaper
 splashPath=/logo
 timeout=10

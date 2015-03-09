@@ -1,0 +1,52 @@
+local component = require( "component" )
+local event = require( "event" )
+local term = require( "term" )
+
+local br = component.br_reactor
+local tr = component.br_turbine
+
+local trInput = " "
+
+local function printXY( row, col, s, ... )
+	term.setCursor( col, row )
+	print( s:format( ... ) )
+end
+
+term.clear( )
+
+local exit = false
+
+while not exit do
+	term.setCursor( 1, 1 )
+
+	print( "Main Reactor:" )
+	print( string.format( "Fuel Amount: %d mB          ", br.getFuelAmount( ) ) )
+	print( string.format( "Waste Amount: %d mB          ", br.getWasteAmount( ) ) )
+	print( string.format( "Energy Stored: %d RF          ", br.getEnergyStored( ) ) )
+	print( string.format( "Output Last Tick: %04.2f          ", br.getEnergyProducedLastTick( ) ) )
+	print( string.format( "Reactor Temp: %d C          ", br.getCasingTemperature( ) ) )
+
+	local trIn = tr.getInputType( )
+	if trIn then
+		trInput = trIn
+	end
+
+	print( "" )
+	print( "Turbine:" )
+	print( string.format( "Fluid Type: %s          ", trInput ) )
+	print( string.format( "Fluid Flow Rate: %d mB/t          ", tr.getFluidFlowRate( ) ) )
+	print( string.format( "Rotor Velocity: %.2f RPM          ", tr.getRotorSpeed( ) ) )
+	print( string.format( "Energy Last Tick: %.2f RF          ", tr.getEnergyProducedLastTick( ) ) )
+	print( string.format( "Energy Stored: %d RF          ", tr.getEnergyStored( ) ) )
+
+	print( "" )
+	print( "Press any key to exit..." )
+
+	local event, address, arg1, arg2, arg3 = event.pull( 1 )
+	if type( address ) == "string" and component.isPrimary( address ) then
+		if event == "key_down" then
+			exit = true
+		end
+	end
+
+end
