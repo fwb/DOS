@@ -59,6 +59,7 @@ while true do
 		break
 	end
 
+	line = line:gsub("^%s*(.-)%s*$", "%1")
 	--print( "Read [" .. line .. "] from manifest.")
 
 	wget( line )
